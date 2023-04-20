@@ -5,13 +5,21 @@ const ltgtTpl = `{{ $f := .Field }}{{ $r := .Rules }}
 		{{ if $r.Gt }}
 			{{  if gt $r.GetLt $r.GetGt }}
 				if val := {{ accessor . }};  val <= {{ $r.Gt }} || val >= {{ $r.Lt }} {
-					err := {{ err . "value must be inside range (" $r.GetGt ", " $r.GetLt ")" }}
+					{{ if $r.ErrLtGt }}
+						err := {{ err . "validateErrorMsg |" $r.GetErrLtGt }}
+					{{ else }}
+						err := {{ err . "value must be inside range (" $r.GetGt ", " $r.GetLt ")" }}
+					{{ end }}
 					if !all { return err }
 					errors = append(errors, err)
 				}
 			{{ else }}
 				if val := {{ accessor . }}; val >= {{ $r.Lt }} && val <= {{ $r.Gt }} {
-					err := {{ err . "value must be outside range [" $r.GetLt ", " $r.GetGt "]" }}
+					{{ if $r.ErrLtGt }}
+						err := {{ err . "validateErrorMsg |" $r.GetErrLtGt }}
+					{{ else }}
+						err := {{ err . "value must be outside range [" $r.GetLt ", " $r.GetGt "]" }}
+					{{ end }}
 					if !all { return err }
 					errors = append(errors, err)
 				}
@@ -19,20 +27,32 @@ const ltgtTpl = `{{ $f := .Field }}{{ $r := .Rules }}
 		{{ else if $r.Gte }}
 			{{  if gt $r.GetLt $r.GetGte }}
 				if val := {{ accessor . }};  val < {{ $r.Gte }} || val >= {{ $r.Lt }} {
-					err := {{ err . "value must be inside range [" $r.GetGte ", " $r.GetLt ")" }}
+					{{ if $r.ErrLtGte }}
+						err := {{ err . "validateErrorMsg |" $r.GetErrLtGte }}
+					{{ else }}
+						err := {{ err . "value must be inside range [" $r.GetGte ", " $r.GetLt ")" }}
+					{{ end }}
 					if !all { return err }
 					errors = append(errors, err)
 				}
 			{{ else }}
 				if val := {{ accessor . }}; val >= {{ $r.Lt }} && val < {{ $r.Gte }} {
-					err := {{ err . "value must be outside range [" $r.GetLt ", " $r.GetGte ")" }}
+					{{ if $r.ErrLtGte }}
+						err := {{ err . "validateErrorMsg |" $r.GetErrLtGte }}
+					{{ else }}
+						err := {{ err . "value must be outside range [" $r.GetLt ", " $r.GetGte ")" }}
+					{{ end }}
 					if !all { return err }
 					errors = append(errors, err)
 				}
 			{{ end }}
 		{{ else }}
 			if {{ accessor . }} >= {{ $r.Lt }} {
-				err := {{ err . "value must be less than " $r.GetLt }}
+				{{ if $r.ErrLt }}
+					err := {{ err . "validateErrorMsg |" $r.GetErrLt }}
+				{{ else }}
+					err := {{ err . "value must be less than " $r.GetLt }}
+				{{ end }}
 				if !all { return err }
 				errors = append(errors, err)
 			}
@@ -41,13 +61,21 @@ const ltgtTpl = `{{ $f := .Field }}{{ $r := .Rules }}
 		{{ if $r.Gt }}
 			{{  if gt $r.GetLte $r.GetGt }}
 				if val := {{ accessor . }};  val <= {{ $r.Gt }} || val > {{ $r.Lte }} {
-					err := {{ err . "value must be inside range (" $r.GetGt ", " $r.GetLte "]" }}
+					{{ if $r.ErrLteGt }}
+						err := {{ err . "validateErrorMsg |" $r.GetErrLteGt }}
+					{{ else }}
+						err := {{ err . "value must be inside range (" $r.GetGt ", " $r.GetLte "]" }}
+					{{ end }}
 					if !all { return err }
 					errors = append(errors, err)
 				}
 			{{ else }}
 				if val := {{ accessor . }}; val > {{ $r.Lte }} && val <= {{ $r.Gt }} {
-					err := {{ err . "value must be outside range (" $r.GetLte ", " $r.GetGt "]" }}
+					{{ if $r.ErrLteGt }}
+						err := {{ err . "validateErrorMsg |" $r.GetErrLteGt }}
+					{{ else }}
+						err := {{ err . "value must be outside range (" $r.GetLte ", " $r.GetGt "]" }}
+					{{ end }}
 					if !all { return err }
 					errors = append(errors, err)
 				}
@@ -55,33 +83,53 @@ const ltgtTpl = `{{ $f := .Field }}{{ $r := .Rules }}
 		{{ else if $r.Gte }}
 			{{ if gt $r.GetLte $r.GetGte }}
 				if val := {{ accessor . }};  val < {{ $r.Gte }} || val > {{ $r.Lte }} {
-					err := {{ err . "value must be inside range [" $r.GetGte ", " $r.GetLte "]" }}
+					{{ if $r.ErrLteGte }}
+						err := {{ err . "validateErrorMsg |" $r.GetErrLteGte }}
+					{{ else }}
+						err := {{ err . "value must be inside range [" $r.GetGte ", " $r.GetLte "]" }}
+					{{ end }}
 					if !all { return err }
 					errors = append(errors, err)
 				}
 			{{ else }}
 				if val := {{ accessor . }}; val > {{ $r.Lte }} && val < {{ $r.Gte }} {
-					err := {{ err . "value must be outside range (" $r.GetLte ", " $r.GetGte ")" }}
+					{{ if $r.ErrLteGte }}
+						err := {{ err . "validateErrorMsg |" $r.GetErrLteGte }}
+					{{ else }}
+						err := {{ err . "value must be outside range (" $r.GetLte ", " $r.GetGte ")" }}
+					{{ end }}
 					if !all { return err }
 					errors = append(errors, err)
 				}
 			{{ end }}
 		{{ else }}
 			if {{ accessor . }} > {{ $r.Lte }} {
-				err := {{ err . "value must be less than or equal to " $r.GetLte }}
+				{{ if $r.ErrLte }}
+					err := {{ err . "validateErrorMsg |" $r.GetErrLte }}
+				{{ else }}
+					err := {{ err . "value must be less than or equal to " $r.GetLte }}
+				{{ end }}
 				if !all { return err }
 				errors = append(errors, err)
 			}
 		{{ end }}
 	{{ else if $r.Gt }}
 		if {{ accessor . }} <= {{ $r.Gt }} {
-			err := {{ err . "value must be greater than " $r.GetGt }}
+			{{ if $r.ErrGt }}
+				err := {{ err . "validateErrorMsg |" $r.GetErrGt }}
+			{{ else }}
+				err := {{ err . "value must be greater than " $r.GetGt }}
+			{{ end }}
 			if !all { return err }
 			errors = append(errors, err)
 		}
 	{{ else if $r.Gte }}
 		if {{ accessor . }} < {{ $r.Gte }} {
-			err := {{ err . "value must be greater than or equal to " $r.GetGte }}
+			{{ if $r.ErrGte }}
+				err := {{ err . "validateErrorMsg |" $r.GetErrGte }}
+			{{ else }}
+				err := {{ err . "value must be greater than or equal to " $r.GetGte }}
+			{{ end }}
 			if !all { return err }
 			errors = append(errors, err)
 		}

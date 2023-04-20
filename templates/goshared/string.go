@@ -60,22 +60,34 @@ const strTpl = `
 			}
 		{{ end }}
 	{{ else if $r.MinBytes }}
-		{{ if $r.MaxBytes }}
+		{{ if and $r.MaxBytes }}
 			if l := len({{ accessor . }}); l < {{ $r.GetMinBytes }} || l > {{ $r.GetMaxBytes }} {
-					err := {{ err . "value length must be between " $r.GetMinBytes " and " $r.GetMaxBytes " bytes, inclusive" }}
+					{{ if $r.ErrMinMaxBytes }}
+						err := {{ err . "validateErrorMsg |" $r.GetErrMinMaxBytes }}
+					{{ else }}
+						err := {{ err . "value length must be between " $r.GetMinBytes " and " $r.GetMaxBytes " bytes, inclusive" }}
+					{{ end }}
 					if !all { return err }
 					errors = append(errors, err)
 			}
 		{{ else }}
 			if len({{ accessor . }}) < {{ $r.GetMinBytes }} {
-				err := {{ err . "value length must be at least " $r.GetMinBytes " bytes" }}
+				{{ if $r.ErrMinBytes }}
+					err := {{ err . "validateErrorMsg |" $r.GetErrMinBytes }}
+				{{ else }}
+					err := {{ err . "value length must be at least " $r.GetMinBytes " bytes" }}
+				{{ end }}
 				if !all { return err }
 				errors = append(errors, err)
 			}
 		{{ end }}
 	{{ else if $r.MaxBytes }}
 		if len({{ accessor . }}) > {{ $r.GetMaxBytes }} {
-			err := {{ err . "value length must be at most " $r.GetMaxBytes " bytes" }}
+			{{ if $r.ErrMaxBytes }}
+				err := {{ err . "validateErrorMsg |" $r.GetErrMaxBytes }}
+			{{ else }}
+				err := {{ err . "value length must be at most " $r.GetMaxBytes " bytes" }}
+			{{ end }}
 			if !all { return err }
 			errors = append(errors, err)
 		}
@@ -177,7 +189,11 @@ const strTpl = `
 
 	{{ if $r.Pattern }}
 		if !{{ lookup $f "Pattern" }}.MatchString({{ accessor . }}) {
-			err := {{ err . "value does not match regex pattern " (lit $r.GetPattern) }}
+			{{ if $r.ErrPattern }}
+				err := {{ err . "validateErrorMsg |" $r.GetErrPattern }}
+			{{ else }}
+				err := {{ err . "value does not match regex pattern " (lit $r.GetPattern) }}
+			{{ end }}
 			if !all { return err }
 			errors = append(errors, err)
 		}
